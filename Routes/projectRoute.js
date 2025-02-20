@@ -49,7 +49,7 @@ router.post("/create-project", verifyToken, checkAdminRole, async (req, res) => 
 
 
 // Get all projects
-router.get("/get-all-projects", verifyToken, checkAdminRole, async (req, res) => {
+router.get("/get-all-projects", verifyToken, async (req, res) => {
     try {
         const projects = await Project.find()
             .populate("owner", "name email")
@@ -221,7 +221,7 @@ router.get('/get-project-deadline/:taskId', verifyToken, async (req, res) => {
 
 
 
-// Get all projects
+// Get all projects created by project manager
 router.get("/get-pm-project", verifyToken, checkAdminRole, async (req, res) => {
     try {
         const id = req.user.id;

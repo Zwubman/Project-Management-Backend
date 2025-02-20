@@ -22,10 +22,12 @@ router.post("/create-task", verifyToken, checkAdminRole, async (req, res) => {
           "All fields are required: title, assignedTo, deadline, projectId",
       });
     }
+
     const project = await Project.findById(projectId);
     if (!project) {
       return res.status(404).json({ message: "Project not found" });
     }
+
     const newTask = new Task({
       title,
       assignedTo,
@@ -35,15 +37,22 @@ router.post("/create-task", verifyToken, checkAdminRole, async (req, res) => {
     });
 
     const savedTask = await newTask.save();
+
+    // Add task to project and ensure assignedTo is in participants
     await Project.findByIdAndUpdate(
       projectId,
       {
         $push: { hasTask: savedTask._id },
+        $addToSet: { participants: assignedTo }, // Ensures no duplicates
       },
       { new: true }
     );
+
     const user = await Member.findById(assignedTo);
-    await sendEmail({ email: user.email, taskTitle: newTask.title });
+    if (user) {
+      await sendEmail({ email: user.email, taskTitle: newTask.title });
+    }
+
     res.status(201).json({
       message: "Task created successfully and assigned to project",
       task: savedTask,
